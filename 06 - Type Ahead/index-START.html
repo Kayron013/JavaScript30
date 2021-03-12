@@ -1,22 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Type Ahead 👀</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Type Ahead 👀</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <form class="search-form">
+      <input type="text" class="search" placeholder="City or State" />
+      <ul class="suggestions">
+        <li>Filter for a city</li>
+        <li>or a state</li>
+      </ul>
+    </form>
+    <script>
+      (async () => {
+        const endpoint =
+          'https://gist.githubusercontent.com/Miserlou/c5cd8364bf9b2420bb29/raw/2bf258763cdddd704f8ffd3ea9a3e81d25e2c6f6/cities.json';
+        const places = await fetch(endpoint).then(r => r.json());
 
-  <form class="search-form">
-    <input type="text" class="search" placeholder="City or State">
-    <ul class="suggestions">
-      <li>Filter for a city</li>
-      <li>or a state</li>
-    </ul>
-  </form>
-<script>
-const endpoint = 'https://gist.githubusercontent.com/Miserlou/c5cd8364bf9b2420bb29/raw/2bf258763cdddd704f8ffd3ea9a3e81d25e2c6f6/cities.json';
+        const searchEl = document.querySelector('.search');
+        const suggestionListEl = document.querySelector('.suggestions');
 
-</script>
-</body>
+        const findResuls = term => {
+          const regex = new RegExp(term, 'gi');
+          return places.filter(place => place.city.match(regex) || place.state.match(regex));
+        };
+
+        const displayResults = (results, term) => {
+          const regex = new RegExp(term, 'gi');
+          const html = results
+            .map(place => {
+              const city = place.city.replace(regex, `<span class=hl>${term}</span>`);
+              const state = place.state.replace(regex, `<span class=hl>${term}</span>`);
+              const population = Intl.NumberFormat().format(place.population);
+
+              return `
+              <li>
+                <span class='name'>${city}, ${state}</span>
+                <span class='population'>${population}</span>
+              </li>
+              `;
+            })
+            .join('\n');
+
+          suggestionListEl.innerHTML = html;
+        };
+
+        searchEl.addEventListener('input', function () {
+          const term = this.value.trim();
+          const results = findResuls(term);
+          displayResults(results, term);
+        });
+      })();
+    </script>
+  </body>
 </html>
